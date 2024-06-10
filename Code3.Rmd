@@ -1,0 +1,283 @@
+---
+title: "Worksheet-3"
+author: "Vishal Ravishankar"
+date: "2023-08-30"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data3a = read.csv('students.csv',header=TRUE)
+df3a=data.frame(data3a)
+library(readr)
+library(dplyr)
+library(multcomp)
+library(stats)
+library(ggplot2)
+library(e1071)
+```
+#metadata
+The table has four columns A, B, C and D which corresponds to the 4 different fitness routines.
+Each observations is the score obtained by the student out of 100 in the final exams.
+
+#Problem 1 
+Read the data set and display the box plot for each of the fitness plans A, B, C, D. Analyze the box plot for out liers.
+
+```{r}
+print("Reading the dataset")
+str(data3a)
+
+summary(data3a$A)
+summary(data3a$B)
+summary(data3a$C)
+summary(data3a$D)
+
+
+boxplot(data3a, main = "Boxplot of Max Marks by Diet Plans", xlab = "Diet Plan", ylab = "Max Marks", outlier.size = 1.5, outlier.shape = 50)
+```
+#Problem 1-Inference :
+There is only one outlier in Diet plan A, this shows that dataset is very precise to make further analyzation.
+from box plot we can analyze many statistics of the dataset.
+whiskers on both sides are approximately equal. so all column are symmetrically skewed but not we cannot tell precisely from box plots.
+and the widht of the boxes tell the spread of data. Diet plan C is the maximum spreaded and diet plan A is least spreaded among all diet plans
+
+
+#problem 2
+Is the data symmetrical or skewed for each group? Verify the normality assumption for ANOVA
+ANOVA.(Hint: Find the Pearson’s moment coefficient of skewness and justify it with probability distribution function plot or you
+can also plot the Q-Q plot)
+
+```{r}
+skewness_values<-sapply(data3a,skewness)
+print(skewness_values)
+qqnorm(data3a$A)
+qqnorm(data3a$B)
+qqnorm(data3a$C)
+qqnorm(data3a$D)
+```
+#Problem 2-Inferences:
+ A            B            C            D 
+ 0.290462918  0.009463167  0.031208046 -0.059912651 
+ A,B,C are positively skewed-right tail is longer.
+ D is negatively skewed-left tail is longer.
+ But value close to 0 suggests data is symmetrical.
+ B,C are slightly right skewed and are symmetrical.
+ 
+the qqnorm plots help in identifing whether the datasets follow the normal distribution.the lines pass by origin and are linear so we can tell that all diet plans are normally distributed.
+the line have positive slope so column B,C,D have heavier tails.
+A has lighter tail. all the platykurtic
+```{r}
+create_bell_curve_plot <- function(column_data, column_name) {
+  # Get the mean of the column
+  mu <- mean(column_data) 
+  # Get the standard deviation of the column
+  sigma <- sd(column_data)
+  # Creating a sequence of values within a range around the mean (mu) of the data
+  # with 100 evenly spread out data points.
+  x <- seq(mu - 3*sigma, mu + 3*sigma, length.out = 100) 
+  # Using the dnorm function to calculate the probability density values 
+  # of a normal distribution at specific x-values.
+  y <- dnorm(x, mean = mu, sd = sigma)
+  
+  # Calculate the median and mode
+  median_val <- median(column_data)
+  mode_val <- x[which.max(y)]
+  
+  ggplot() +
+    geom_line(aes(x, y), color = "blue") +
+    geom_vline(xintercept = mu, color = "red", linetype = "dashed") +
+    geom_vline(xintercept = median_val, color = "green", linetype = "dashed") +  # Add median line
+    geom_vline(xintercept = mode_val, color = "purple", linetype = "dashed") +  # Add mode line
+    annotate("text", x = mode_val, y = max(y), label = paste("Median =", round(median_val, 2)), 
+             color = "green", vjust = -0.5, hjust = -0.5) +  # Add mode text
+    labs(title = paste("PDF for Fitness Plan", column_name),
+         x = "Scores obtained by students", y = "Density") +
+    theme_minimal()
+}
+
+# Loop through all the fitness plans and create a PDF for them
+for (col_name in colnames(data3a)) {
+  plot <- create_bell_curve_plot(data3a[[col_name]], col_name)
+  print(plot)
+}
+
+```
+#Problem 2-Inferences:
+from this bell curve,
+if median>mean->negatively skewed
+mean>median -> positively skewed
+mean=median -> symmetrically skewed.
+so A,D=negatively skewed.
+C=positively skewed.
+B=symmetrical skewed.
+
+#problem 3
+Is there any evidence to suggest a difference in the average marks obtained by students under different fitness
+plans? Explain what test are you using and why ? Define the hypothesis and the steps of testing. What does
+the output of this test signify ? (Note: Assume the significance level to be 0.05 )
+
+```{r}
+# Calculate overall mean
+overall_mean <- mean(as.matrix(data3a), na.rm = TRUE)
+# Calculate column means
+column_means <- colMeans(data3a, na.rm = TRUE)
+# Calculate SSB
+ssb <- sum((column_means - overall_mean)^2) * nrow(data3a)
+# Calculate SSW
+ssw <- sum((as.matrix(data3a) - rep(column_means, each = nrow(data3a)))^2)
+cat("SSB: ", ssb, "\n")
+cat("SSW", ssw, "\n")
+n<-nrow(data3a)
+dfb<-4-1
+dfw<-n-4
+print(n)
+print(dfw)
+print(dfb)
+MSB<-ssb/dfb
+MSW<-ssw/dfw
+f_statistic<-MSB/MSW
+print(f_statistic)
+p_value <- pf(f_statistic, dfb, dfw, lower.tail = FALSE)
+print(p_value)
+```
+#Problem 3-Inferences:
+We can use Ftest over here.
+reason:
+as we want to infer about the difference between the avg marks obtained under different fitness level we can consider 
+our null hypothesis as all avg equal and 
+alternative hypothesis as not all means of group A,B,C,D are equal.
+it is one way f test.
+
+and there are more than two columns so if we use t test we have more type 1 err, 
+that is false positive so we can go with f test to compare multiple groups.
+
+and its one way anova because we have only one independent variable i.e. diet plans.
+
+f_stat is 1.766
+f_critical=[df_ssb, df_ssw]=[3,96]=2.70
+f_stat<f_critical
+failed to reject null hypothesis.
+so all means are not equal
+but with this test we cannot tell which means differ from each other
+
+from p value:
+p_value>0.05
+failed to reject null hypothesis 
+so all means are not equal.
+but with this test we cannot tell which means differ from each other
+
+
+lower.tail is set to false because
+anova in one tailed(right tailed test)
+and we want to find if the variation between group is greater than within group
+so basically we want alternative hypothesis to be true.
+it means that we want to f_stat greater than zero.
+
+**PART-B**
+
+#Metadata
+A community of pet lovers and trainers gathered for an exciting pet training event.
+With a total of 48 pets participating, each pet was given a Task (A/B/C/D) and a treat (I,II,III) for finishing it.
+The response times for each pet was recorded. All pets were assigned only one task and one treat.
+
+```{r}
+data3b=read.csv("Datasets/pet_training.csv",header = TRUE)
+str(data3b)
+```
+#Problem 4
+Which specific task exhibits the lowest average training time? Does the combination of different treats and
+tasks significantly influence the training time for pets?
+
+```{r}
+averages <- aggregate(ResponseTime ~ Task, data = data3b, FUN = mean)
+print(averages)
+
+averages <- aggregate(ResponseTime ~ Treat, data = data3b, FUN = mean)
+print(averages)
+
+anova_result <- aov(ResponseTime ~ Treat + Task + Treat:Task, data = data3b)
+summary(anova_result)
+
+```
+#Problem 4-Inferences:
+aggregrate is the inbuilt function,FUN=mean defines we want to calculate avg of
+response time based on task A,B,C,D and treat I,II,III.
+by the result it shows that Task B has the least ResponseTime.
+and treat I has the least response time.
+
+We performed two way anova here,
+Null hypothesis is Treat,task and their combination have significant effect no 
+response time.
+Alternate hypothesis be they do have effect on responsetime.
+
+From P value
+Treat has very much effect on responsetime.so the pets who treated nicely with food, talks, walks
+have very quick response time.
+even task has good effect on pets training time. pets who are trained
+but with the combination of task and treat there is no much effect on 
+pets response time as p value > significance level.
+the combination of different treats and
+tasks does not significantly influence the training time for pet.
+
+From F value
+treat:
+Fcritical:[df_ssa,df_ssw]=[2,36]=3.26
+therefore fstat>fcrtical->reject null hypothesis and accept alternative hypothesis
+Treat has effect on response time
+
+task:
+fcritical:[df_ssb,df_ssw]=[3,36]=2.87
+therefore fstat>fcrtical->reject null hypothesis and accept alternative hypothesis
+task has effect on response time
+
+treat and task
+Fcritical:[df_ssab,df_ssw]=[6,36]=2.36
+therefore fstat<fcrtical->failed to reject null hypothesis
+Treat & task combinaton has no  effect on response time
+
+
+#Problem 5
+Does the choice of treats significantly impact the training time for different tasks? Which specific combinations
+of treats and tasks lead to the most significant differences in training time? (Note: Assume the significance
+level to be 0.05 )
+
+```{r}
+data3b$Treat <- factor(data3b$Treat)
+# Perform two-way ANOVA 
+anova_result <- aov(ResponseTime ~ Treat * Task, data = data3b)
+# Tukey's post hoc analysis
+posthoc_treat <- glht(anova_result, linfct = mcp(Treat = "Tukey"))
+posthoc_summary_treat <- summary(posthoc_treat)
+print(posthoc_summary_treat)
+
+data3b$Task <- factor(data3b$Task)
+# Perform two-way ANOVA 
+anova_result <- aov(ResponseTime ~ Treat * Task, data = data3b)
+# Tukey's post hoc analysis
+posthoc_task <- glht(anova_result, linfct = mcp(Task = "Tukey"))
+posthoc_summary_task <- summary(posthoc_task)
+print(posthoc_summary_task)
+
+
+```
+#Problem 5-Inferences:
+Treat Effect:
+
+The Tukey's post hoc test for the "Treat" factor shows that there are significant differences in training time between some of the treat groups.
+Specifically, there are significant differences between Treatments II and I (p-value = 0.1944), and Treatments III and I (p-value < 0.001), indicating that Treatments II and III have significantly different training times compared to Treatment I.
+There is also a significant difference between Treatments III and II (p-value = 0.0273).
+Task Effect:
+
+The Tukey's post hoc test for the "Task" factor shows that there are significant differences in training time between some of the task groups.
+Specifically, there is a significant difference between Task B and Task A (p-value < 0.001), indicating that Task B has a significantly different training time compared to Task A.
+There is also a significant difference between Task C and Task A (p-value = 0.1959), and Task D and Task A (p-value = 0.0610).
+Furthermore, there is a significant difference between Task C and Task B (p-value = 0.0459), and Task D and Task B (p-value = 0.1561).
+However, there is no significant difference between Task D and Task C (p-value = 0.9383).
+Interaction Effect:
+
+The output indicates that there might be covariate interactions, and the default contrast might be inappropriate. This suggests that the interaction between Treat and Task may have an impact on training time, and further analysis may be needed to understand the nature of this interaction.
+
+

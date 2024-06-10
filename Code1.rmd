@@ -1,0 +1,278 @@
+---
+title: "Worksheet-1"
+author: "Vishal Ravishankar"
+output: html_document
+date: "2023-08-26"
+---
+
+```{r}
+movie_data <- read.csv('14.movie_dataset.csv', header=TRUE)
+```
+
+```{r}
+str(movie_data)
+```
+
+```{r}
+movie_data$title[1:10]
+```
+
+```{r}
+movie_names <- movie_data$title
+summary(movie_names)
+```
+
+```{r}
+movie_budget=movie_data$budget
+mean(movie_budget)
+```
+
+```{r}
+summary(movie_budget)
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(movie_data$budget,type="p")
+plot(movie_data$revenue, type="l")
+```
+
+```{r}
+sorted_data<- movie_data[order(movie_data$revenue, decreasing=TRUE),]
+top_10_rows<-head(sorted_data,n=10)
+top_10_rows
+```
+
+```{r}
+movie_data$ROI=movie_data$revenue/movie_data$budget
+movie_data[1:5,c("title","ROI")]
+```
+
+```{r}
+movie_data$genres <- strsplit(movie_data$genres, " ")
+label_counts <- table(unlist(movie_data$genres))
+label_counts <- sort(label_counts, decreasing = TRUE)
+label_counts
+```
+
+```{r}
+#install.packages("ggplot2",dependencies = TRUE)
+library(ggplot2)
+label_counts_df=as.data.frame(label_counts)
+ggplot(label_counts_df,aes(x=Var1,y=Freq))+ geom_bar(stat="identity",fill="skyblue")+ labs(x="Genre",y="Number of Movies",title="Number of movies for Each Genre")+theme(axis.text.x=element_text(angle=45,hjust=1))
+```
+
+```{r}
+#Problem 1
+#(a)
+summary(movie_data$budget)
+summary(movie_data$popularity)
+summary(movie_data$revenue)
+summary(movie_data$runtime)
+summary(movie_data$vote_average)
+summary(movie_data$vote_count)
+summary(movie_data$ROI)
+
+```
+
+```{r}
+
+```
+
+```{r}
+#(b)
+
+# The minimum revenue for a movie is 0, while the maximum revenue is 2.788 billion.
+# The median runtime is 104 minutes, while the mean runtime is 107.5 minutes. This means that half of the movies have a runtime of less than 104 minutes and half have a runtime of more than 104 minutes.
+# The minimum vote average for a movie is 0, while the maximum vote average is 10.
+# The median vote count is 299, while the mean vote count is 784.7. This means that half of the movies have a vote count of less than 299 and half have a vote count of more than 299. 
+
+```
+
+```{r}
+#(c)
+#Mean, median and mean an be useful for this
+```
+
+```{r}
+#(d)Classify all the variables/columns into their types of data attributes (nominal, ordinal, interval, ratio)
+
+
+#Nominal: genres, original_language, title, director 
+#Ordinal: id, release_date
+#Ratio: Budget, popularity, revenue, runtime, vote_average, vote_count
+
+```
+
+```{r}
+#Problem 2
+```
+
+```{r}
+#(a) Investigate data for missing values and classify as MCAR, MAR, MNAR
+#data[data==0]<-NA
+sum(is.na(movie_data$genres))
+sum(is.na(movie_data$id))
+sum(is.na(movie_data$original_language))
+sum(is.na(movie_data$popularity))
+sum(is.na(movie_data$release_date))
+sum(is.na(movie_data$title))
+sum(is.na(movie_data$vote_average))
+sum(is.na(movie_data$vote_count))
+sum(is.na(movie_data$director))
+#All of the columns above have no missing values in their dataset
+```
+
+```{r}
+cat("Number of missing values in revenue: ",sum(movie_data$revenue==0),"This data would be MAR as it could be due to the comapny's choice to not reveal their revenue.","\n") 
+cat("Number of missing values in runtime: ",sum(movie_data$runtime==0),"This data is MCAR as runtime is public knowledge and could have easily been omitted. \n") 
+cat("Number of missing values in budget: ",sum(movie_data$budget==0),"This data would also be MAR as it is again due to the comapny's choice to not reveal their budget.\n")
+cat("Number of missing values in ROI: ",sum(is.na(movie_data$ROI)),"\n")
+
+
+```
+
+```{r}
+
+average_revenue <- mean(movie_data$revenue[data$revenue!=0])
+data$revenue[movie_data$revenue==0]<-average_revenue
+cat("Number of missing values in revenue: ",sum(movie_data$revenue==0))
+```
+
+```{r}
+average_runtime <- mean(data$runtime[movie_data$runtime!=0])
+movie_data$runtime[movie_data$runtime==0]<-average_runtime
+cat("Number of missing values in runtime: ",sum(movie_data$runtime==0))
+```
+
+```{r}
+average_budget <- mean(movie_data$budget[movie_data$budget!=0])
+movie_data$budget[movie_data$budget==0]<-average_budget
+cat("Number of missing values in budget: ",sum(movie_data$budget==0))
+```
+
+```{r}
+#Problem 3
+
+```
+
+```{r}
+movie_data$pos_dt <- strptime(movie_data$release_date, format = "%d-%m-%Y")
+movie_data$release_year<-format(movie_data$pos_dt, "%Y")
+
+movies_per_year <- table(movie_data$release_year)
+movies_per_year_df <- as.data.frame(movies_per_year)
+colnames(movies_per_year_df) <- c("Year", "Number_of_Movies")
+barplot(movies_per_year_df$Number_of_Movies, names.arg = movies_per_year_df$Year,
+        xlab = "Year", ylab = "Number of Movies",
+        main = "Number of Movies Released per Year")
+
+```
+
+```{r}
+cat("We can see that the above distribution is negatively skewed, with the number of movies being released in the recent years increasing exponentially. This can be due to a number of factors.Rapid development of technology has made movies cheaper and easier to make. Another reason could be the disposable income of people has increased.")
+```
+
+```{r}
+#Problem 4
+ggplot(data = data, aes(y = runtime)) +
+  geom_boxplot(fill = "skyblue") +
+  labs(y = "Runtime (minutes)", title = "Distribution of Runtimes") +
+  theme_minimal() +
+  coord_flip()
+```
+
+```{r}
+cat("The distribution of runtime is slightly postively skewed as the median is closer to the bottom of the box. We can observe that most movies are have a duration of 1-2 hours, which would help in making sure the audiance are involved in the movie. Quite a few movies are reaching around 200 min, however very few movies go beyond this limit.")
+
+```
+
+```{r}
+#Problem 5
+cat("Number of missing values in ROI before: ",sum(is.na(movie_data$ROI)),"\n")
+movie_data$ROI=movie_data$revenue/data$budget
+cat("Number of missing values in ROI after: ",sum(is.na(movie_data$ROI)),"\n")
+```
+
+```{r}
+highest_budget <- head(movie_data[order(movie_data$budget, decreasing = TRUE), ], 20)
+highest_revenue <- head(movie_data[order(movie_data$revenue, decreasing = TRUE), ], 20)
+highest_roi <- head(movie_data[order(movie_data$ROI, decreasing = TRUE), ], 20)
+highest_revenue
+```
+
+```{r}
+ggp <- ggplot(highest_budget, aes(budget, title)) +   geom_bar(stat = "identity")
+ggp +  coord_flip() +theme(plot.margin = margin(0.1, 0.01, 0.1, 0.1, "cm")) 
+```
+
+```{r}
+ggp <- ggplot(highest_revenue, aes(revenue, title)) +   geom_bar(stat = "identity")
+ggp +  coord_flip() +theme(plot.margin = margin(0.1, 0.01, 0.1, 0.1, "cm"))
+```
+
+```{r}
+ggp <- ggplot(highest_roi, aes(ROI, title)) +   geom_bar(stat = "identity")
+ggp +  coord_flip() +theme(plot.margin = margin(0.1, 0.01, 0.1, 0.1, "cm"))
+```
+
+```{r}
+#Problem 6
+
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+```
+
+```{r}
+#ROI
+movies_analysis <- movie_data %>%
+  unnest(genres) %>%
+  group_by(genres) %>%
+  summarize(mean_budget = mean(budget),
+            mean_revenue = mean(revenue),
+            mean_roi = mean(ROI))
+
+```
+
+```{r}
+ggplot(movies_analysis, aes(x = reorder(genres, -mean_roi), y = mean_roi)) +
+  geom_bar(stat = "identity", fill = "blue", alpha = 0.7) +
+  labs(x = "Genre", y = "Mean ROI", title = "Mean ROI by Genre") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+
+ggplot(movies_analysis, aes(x = reorder(genres, -mean_budget), y = mean_budget)) +
+  geom_bar(stat = "identity", fill = "blue", alpha = 0.7) +
+  labs(x = "Genre", y = "Mean ROI", title = "Mean budget by Genre") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+
+ggplot(movies_analysis, aes(x = reorder(genres, -mean_revenue), y = mean_revenue)) +
+  geom_bar(stat = "identity", fill = "blue", alpha = 0.7) +
+  labs(x = "Genre", y = "Mean Revenue", title = "Mean revenue by Genre") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+
+#Since Animated Documentaries have the highest ROI and revenue I would like to make an animated documentary.
+
+
+
+```
