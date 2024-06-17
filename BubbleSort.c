@@ -8,7 +8,7 @@ void display(int *arr,int length){
 }
 
 
-int bubblesort(int *arr, int length) {
+void bubblesort(int *arr, int length) {
     for(int i = 0;i < length-1;i++){
         for(int j = 0;j<length-i-1;j++){
             if(arr[j]>arr[j+1]){
