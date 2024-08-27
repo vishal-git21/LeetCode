@@ -1,3 +1,5 @@
+/* Code to partition a list based off of a certain value */
+
 struct ListNode* partition(struct ListNode* head, int x) {
     if (!head || head->next == NULL) {
         return head;
